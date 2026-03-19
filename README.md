@@ -78,3 +78,5 @@ MIT License — see [LICENSE](LICENSE).
 ## Attribution
 
 Created by Daniel Bates, BatesAI LLC. Catalog data sourced from the [libretro-database](https://github.com/libretro/libretro-database) project (MIT License).
+
+A full fork of libretro-database is maintained at [danielalanbates/libretro-database](https://github.com/danielalanbates/libretro-database) for source data preservation.

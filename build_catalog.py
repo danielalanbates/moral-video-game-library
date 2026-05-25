@@ -310,12 +310,16 @@ def build_qualification_table(db_path):
     c.execute(f"SELECT id, name FROM platforms WHERE name IN ({placeholders})", QUALIFYING_PLATFORMS)
     qualifying_platform_ids = {row[0]: row[1] for row in c.fetchall()}
 
-    if not qualifying_platform_ids:
-        # Try partial matching
-        for plat in QUALIFYING_PLATFORMS:
-            c.execute("SELECT id, name FROM platforms WHERE name LIKE ?", (f"%{plat}%",))
-            for row in c.fetchall():
-                qualifying_platform_ids[row[0]] = row[1]
+    # Always also try fuzzy matching on a normalized key (strip non-alnum, lowercase)
+    def norm(s):
+        return re.sub(r"[^a-z0-9]", "", s.lower())
+    c.execute("SELECT id, name FROM platforms")
+    all_plats = c.fetchall()
+    want = {norm(p) for p in QUALIFYING_PLATFORMS}
+    for pid, pname in all_plats:
+        np = norm(pname)
+        if np in want or any(w in np or np in w for w in want):
+            qualifying_platform_ids[pid] = pname
 
     print(f"Found {len(qualifying_platform_ids)} qualifying platforms")
 

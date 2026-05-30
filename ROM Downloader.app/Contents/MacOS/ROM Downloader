@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+import sys
+import os
+import subprocess
+
+# Get the app bundle path
+app_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+repo_path = os.path.dirname(app_path)
+
+# Add repo to path so we can import the downloader
+sys.path.insert(0, repo_path)
+
+# Import and run the downloader UI
+from rom_downloader_ui import main
+
+if __name__ == '__main__':
+    main()

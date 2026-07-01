@@ -61,6 +61,26 @@ python build_catalog.py
 
 This clones the [libretro-database](https://github.com/libretro/libretro-database) and converts DAT files into the SQLite catalog, then applies qualification filtering.
 
+## ROM Downloader (macOS app)
+
+This repo ships **ROM Downloader** (v3.1), a native macOS app for browsing the
+catalog and downloading qualifying titles with integrity verification:
+
+- Browse and search the catalog by platform; multi-select downloads.
+- **Verified sourcing** — for 12 platforms, each download is matched against a
+  known No-Intro/Redump set on the Internet Archive and **SHA-1 verified**
+  against the published hash; mismatches are deleted, never kept. Platforms
+  without a clean set fall back to title search, clearly marked *unverified*.
+- Concurrent download queue with live per-file progress.
+- Configurable library folder and catalog location — point it at this
+  library's `moral_video_game_library.db` (or drop the DB into
+  `~/Library/Application Support/ROMDownloader/`).
+- Optional export to a Delta emulator iCloud folder.
+
+**Install:** download `ROM Downloader.app` from this repo, move it to
+`/Applications`, and launch. Requires Python 3 (Homebrew or system) with Tk.
+Only games with `download_allowed = 1` in the catalog are shown.
+
 ## Contributing
 
 Contributions welcome! You can help by:

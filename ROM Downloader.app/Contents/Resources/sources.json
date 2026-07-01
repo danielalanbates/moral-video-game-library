@@ -1,0 +1,50 @@
+{
+  "Sinclair - ZX Spectrum": {
+    "ia_item": "ZXSpectrumTOSECSetV20171101LadyEklipse",
+    "verified_files": 71013
+  },
+  "Nintendo - Nintendo Entertainment System": {
+    "ia_item": "ef_nintendo_entertainment_-system_-no-intro_2024-04-23",
+    "verified_files": 6489
+  },
+  "Commodore - CD32": {
+    "ia_item": "commodore_amiga_cd32",
+    "verified_files": 200
+  },
+  "Commodore - Amiga": {
+    "ia_item": "nointro.ca",
+    "verified_files": 3169
+  },
+  "Atari - 2600": {
+    "ia_item": "atari-2600-no-intro-romset-2026-05-29",
+    "verified_files": 906
+  },
+  "Sega - Mega Drive - Genesis": {
+    "ia_item": "ef_mega_genesis_no-intro_2024-04-21",
+    "verified_files": 3264
+  },
+  "Sony - PlayStation 2": {
+    "ia_item": "non-redump_sony_playstation2_part1",
+    "verified_files": 117
+  },
+  "Sony - PlayStation": {
+    "ia_item": "non-redump_sony_playstation",
+    "verified_files": 261
+  },
+  "Atari - Jaguar": {
+    "ia_item": "ef_atari_jaguar_no-intro_2023-10-13",
+    "verified_files": 277
+  },
+  "The 3DO Company - 3DO": {
+    "ia_item": "non-redump_panasonic_3do",
+    "verified_files": 13
+  },
+  "Nintendo - Game Boy": {
+    "ia_item": "No-Intro_GB",
+    "verified_files": 1896
+  },
+  "Atari - 5200": {
+    "ia_item": "atari-5200-no-intro-romset-2025-04-06",
+    "verified_files": 182
+  }
+}

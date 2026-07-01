@@ -1,0 +1,5 @@
+#!/bin/bash
+RES="$( cd "$( dirname "${BASH_SOURCE[0]}" )/../Resources" && pwd )"
+PY=/opt/homebrew/bin/python3
+[ -x "$PY" ] || PY=/usr/bin/python3
+exec "$PY" "$RES/rom_downloader.py"

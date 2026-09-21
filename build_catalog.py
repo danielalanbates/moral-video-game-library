@@ -376,6 +376,103 @@ def build_qualification_table(db_path):
     conn.close()
 
 
+# ---------------------------------------------------------------------------
+# licensing table
+#
+# Per-game copyright metadata. The `copyrighted` column is a simple yes/no
+# (1/0) derived from `copyright_status`, so anyone querying — or deciding
+# what is safe to download — can tell at a glance:
+#
+#   copyrighted = 0  -> verified public domain, freeware, or open source
+#   copyrighted = 1  -> copyrighted, or not yet verified (conservative default)
+#
+# The derivation is enforced by triggers, so every writer (build scripts,
+# taggers, manual SQL) gets a consistent value without remembering the rule.
+# ---------------------------------------------------------------------------
+
+LICENSING_DDL = """
+CREATE TABLE IF NOT EXISTS licensing (
+    game_id INTEGER PRIMARY KEY,
+    copyright_status TEXT DEFAULT 'unknown',
+    license_name TEXT,
+    publisher_status TEXT DEFAULT 'unknown',
+    source_url TEXT,
+    download_allowed INTEGER DEFAULT 0,
+    copyrighted INTEGER DEFAULT 1,
+    notes TEXT,
+    updated_at TEXT,
+    FOREIGN KEY (game_id) REFERENCES games(id)
+)
+"""
+
+LICENSING_TRIGGER_DDL = """
+CREATE TRIGGER IF NOT EXISTS licensing_copyrighted_on_insert
+AFTER INSERT ON licensing
+FOR EACH ROW
+BEGIN
+    UPDATE licensing
+    SET copyrighted = CASE
+        WHEN NEW.copyright_status IN ('public_domain', 'freeware', 'open_source') THEN 0
+        ELSE 1 END
+    WHERE game_id = NEW.game_id;
+END;
+
+CREATE TRIGGER IF NOT EXISTS licensing_copyrighted_on_status_change
+AFTER UPDATE OF copyright_status ON licensing
+FOR EACH ROW
+BEGIN
+    UPDATE licensing
+    SET copyrighted = CASE
+        WHEN NEW.copyright_status IN ('public_domain', 'freeware', 'open_source') THEN 0
+        ELSE 1 END
+    WHERE game_id = NEW.game_id;
+END;
+"""
+
+
+def build_licensing_table(db_path):
+    """Create the licensing table (copyright metadata) if it is missing.
+
+    Unlike the qualification tables, licensing is never dropped: it
+    accumulates human research (mark_defunct_publishers.py, manual curation).
+    Older tables are migrated in place: missing columns are added and the
+    derived `copyrighted` column is backfilled.
+    """
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+
+    c.execute(LICENSING_DDL)
+    c.executescript(LICENSING_TRIGGER_DDL)
+
+    # Migration: tables created before this change predate some columns.
+    existing = {row[1] for row in c.execute("PRAGMA table_info(licensing)").fetchall()}
+    for column, coldef in (
+        ("notes", "TEXT"),
+        ("updated_at", "TEXT"),
+        ("copyrighted", "INTEGER DEFAULT 1"),
+    ):
+        if column not in existing:
+            c.execute(f"ALTER TABLE licensing ADD COLUMN {column} {coldef}")
+            print(f"  migrated: added licensing.{column}")
+
+    # Backfill the derived yes/no column from current statuses.
+    c.execute("""
+        UPDATE licensing SET copyrighted = CASE
+            WHEN copyright_status IN ('public_domain', 'freeware', 'open_source') THEN 0
+            ELSE 1 END
+    """)
+
+    # Seed one row per game. Research starts as unknown => copyrighted = 1.
+    c.execute("INSERT OR IGNORE INTO licensing (game_id) SELECT id FROM games")
+    conn.commit()
+
+    total = c.execute("SELECT COUNT(*) FROM licensing").fetchone()[0]
+    free = c.execute("SELECT COUNT(*) FROM licensing WHERE copyrighted = 0").fetchone()[0]
+    print(f"Licensing rows: {total} ({free} verified copyright-free)")
+
+    conn.close()
+
+
 if __name__ == "__main__":
     import shutil
 
@@ -388,4 +485,8 @@ if __name__ == "__main__":
 
     print("Building qualification table...")
     build_qualification_table(DB_PATH)
+    print("\nDone! Database saved to:", DB_PATH)
+
+    print("\nBuilding licensing table (copyright metadata)...")
+    build_licensing_table(DB_PATH)
     print("\nDone! Database saved to:", DB_PATH)

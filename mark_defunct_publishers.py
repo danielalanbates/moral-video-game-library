@@ -11,7 +11,9 @@ This is a research heuristic — a human should review before flipping download_
 
 import sqlite3
 import re
-from datetime import datetime
+from datetime import datetime, timezone
+
+from build_catalog import ensure_licensing_schema
 
 DB_PATH = "moral_video_game_library.db"
 
@@ -70,7 +72,12 @@ def main():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    now = datetime.utcnow().isoformat()
+    # Make sure the licensing table (and the copyrighted trigger) exists,
+    # migrating older tables first. Previously this script crashed on a fresh
+    # database because no build step ever created the table.
+    ensure_licensing_schema(conn)
+
+    now = datetime.now(timezone.utc).isoformat()
     total_marked = 0
 
     for publisher, fragments in DEFUNCT_PUBLISHERS.items():

@@ -34,6 +34,7 @@ The SQLite database (`moral_video_game_library.db`) contains:
 - **qualification** — Filtering metadata: support status, remaster status, last publication year, studio status
 - **guidebooks** — Links to game guides, manuals, and walkthroughs from public sources
 - **exclusions** — Games explicitly excluded with reasons (remastered, still sold, etc.)
+- **licensing** — Per-game copyright metadata with a derived `copyrighted` yes/no column (`0` = verified public domain / freeware / open source)
 
 ## Platforms Covered
 

@@ -430,19 +430,17 @@ END;
 """
 
 
-def build_licensing_table(db_path):
-    """Create the licensing table (copyright metadata) if it is missing.
+def ensure_licensing_schema(conn):
+    """Create or migrate the licensing table, then install the triggers.
 
-    Unlike the qualification tables, licensing is never dropped: it
-    accumulates human research (mark_defunct_publishers.py, manual curation).
-    Older tables are migrated in place: missing columns are added and the
-    derived `copyrighted` column is backfilled.
+    Shared by build_licensing_table and the taggers. Tables created before
+    the `copyrighted` column existed get their missing columns added first;
+    the triggers write `copyrighted`, so they must only be created after the
+    column exists. The derived column is then backfilled from current
+    statuses.
     """
-    conn = sqlite3.connect(db_path)
     c = conn.cursor()
-
     c.execute(LICENSING_DDL)
-    c.executescript(LICENSING_TRIGGER_DDL)
 
     # Migration: tables created before this change predate some columns.
     existing = {row[1] for row in c.execute("PRAGMA table_info(licensing)").fetchall()}
@@ -455,12 +453,30 @@ def build_licensing_table(db_path):
             c.execute(f"ALTER TABLE licensing ADD COLUMN {column} {coldef}")
             print(f"  migrated: added licensing.{column}")
 
+    # Only now that the column exists is it safe to create the triggers.
+    c.executescript(LICENSING_TRIGGER_DDL)
+
     # Backfill the derived yes/no column from current statuses.
     c.execute("""
         UPDATE licensing SET copyrighted = CASE
             WHEN copyright_status IN ('public_domain', 'freeware', 'open_source') THEN 0
             ELSE 1 END
     """)
+    conn.commit()
+
+
+def build_licensing_table(db_path):
+    """Create the licensing table (copyright metadata) if it is missing.
+
+    Unlike the qualification tables, licensing is never dropped: it
+    accumulates human research (mark_defunct_publishers.py, manual curation).
+    Older tables are migrated in place: missing columns are added and the
+    derived `copyrighted` column is backfilled.
+    """
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+
+    ensure_licensing_schema(conn)
 
     # Seed one row per game. Research starts as unknown => copyrighted = 1.
     c.execute("INSERT OR IGNORE INTO licensing (game_id) SELECT id FROM games")

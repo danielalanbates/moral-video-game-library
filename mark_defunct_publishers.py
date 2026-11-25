@@ -13,7 +13,7 @@ import sqlite3
 import re
 from datetime import datetime, timezone
 
-from build_catalog import LICENSING_DDL, LICENSING_TRIGGER_DDL
+from build_catalog import ensure_licensing_schema
 
 DB_PATH = "moral_video_game_library.db"
 
@@ -72,11 +72,10 @@ def main():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
-    # Make sure the licensing table (and the copyrighted trigger) exists.
-    # Previously this script crashed on a fresh database because no build
-    # step ever created the table.
-    c.execute(LICENSING_DDL)
-    c.executescript(LICENSING_TRIGGER_DDL)
+    # Make sure the licensing table (and the copyrighted trigger) exists,
+    # migrating older tables first. Previously this script crashed on a fresh
+    # database because no build step ever created the table.
+    ensure_licensing_schema(conn)
 
     now = datetime.now(timezone.utc).isoformat()
     total_marked = 0
